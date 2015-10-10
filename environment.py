@@ -4,9 +4,9 @@ import maze_generator
 import maze
 
 class Environment:
-    def __init__(self, size=(9, 9), goal = (9, 9)):
+    def __init__(self, size, goal_location):
         self.size = size
-        self.goal = goal
+        self.goal = goal_location
         self.maze = maze.Maze(self.size, self.goal)
         self.current_coordinate = (0, 0)
         self.move_count = 0
@@ -53,8 +53,11 @@ class Environment:
             self.current_coordinate = neighbor[direction]
             self.move_count += 1
 
-    def goal(self):
-        return self.maze.is_goal(self.current_coordinate)
+    def get_goal(self):
+        if self.move_count > 200:
+            return self.maze.is_goal(self.current_coordinate)
+        else:
+            return 0
 
     def visual_targets(self):
         return [ \

@@ -1,6 +1,10 @@
 import numpy as np
 import math
 import random
+import pickle
+
+import environment
+import q_agent
 
 class DatasetGenerator:
     def __init__(self, size):
@@ -14,7 +18,7 @@ class DatasetGenerator:
             cid = self.current_coordinate[1] + self.size[0] -1
         elif self.current_coordinate[1] == self.size[1] -1:
             cid = (self.size[0] * 2 + self.size[1] - 3) - self.current_coordinate[0]
-        elif self.current_coordinate[0] == 0:
+        else:
             cid = (self.size[0] + self.size[1] -2) * 2  - self.current_coordinate[1]
         return cid
 
@@ -61,8 +65,34 @@ class DatasetGenerator:
             visual_range = [round(i / DEGREE_PER_DOT) for i in [angle - visual_width, angle + visual_width]]
             image[visual_range[0]:(visual_range[1] + 1)] = 1
         return image
+        
+    def generate_one_seq_q(self):
+        env =environment.Environment(size)
+        agent = q_agent.QAgent(env)
+        
+        env.maze.display_cui()
+        
+        image = []
+        directions = []
+        coordinates = []
 
-    def generate_seq(self, seq_length):
+        image.append(self.visual_image())
+        coordinates.append(0)
+        
+        while not env.get_goal():
+            s, a, next_s = agent.choose_action()
+            directions.append(a)
+            image.append(self.visual_image(s))
+            coordinates.append(s)
+        env.reset()
+        
+        input = []
+        for i in range(len(directions)):
+            input.append(directions[i] + image[i].tolist())
+        
+        return { 'input': input, 'output': image[1:], 'coordinates': coordinates[1:] }
+        
+    def generate_seq_random(self, seq_length):
         image = []
         directions = []
         coordinates = []
@@ -72,13 +102,13 @@ class DatasetGenerator:
 
         for i in range(0, seq_length):
             direction_choice = [[1, 0, 0, 0], [0, 1, 0, 0], [0, 0, 1, 0], [0, 0, 0, 1]]
-            if self.current_coordinate[0] == self.size[0] - 1:
+            if self.current_coordinate[0] == self.size[0] - 1 or (self.current_coordinate[0] == 0 and self.current_coordinate[1] in range(1, self.size[1] -1)):
                 direction_choice.remove([1, 0, 0, 0])
-            if self.current_coordinate[0] == 0:
+            if self.current_coordinate[0] == 0 or (self.current_coordinate[0] == self.size[0] - 1 and self.current_coordinate[1] in range(1, self.size[1] -1)):
                 direction_choice.remove([0, 1, 0, 0])
-            if self.current_coordinate[1] == self.size[1] - 1:
+            if self.current_coordinate[1] == self.size[1] - 1 or (self.current_coordinate[1] == 0 and self.current_coordinate[0] in range(1, self.size[0] -1)):
                 direction_choice.remove([0, 0, 1, 0])
-            if self.current_coordinate[1] == 0:
+            if self.current_coordinate[1] == 0 or (self.current_coordinate[1] == self.size[1] - 1 and self.current_coordinate[0] in range(1, self.size[0] -1)):
                 direction_choice.remove([0, 0, 0, 1])
             direction = random.choice(direction_choice)
 
@@ -98,6 +128,24 @@ class DatasetGenerator:
         input = []
         for i in range(len(directions)):
             input.append(directions[i] + image[i].tolist())
-
+            
         return { 'input': input, 'output': image[1:], 'coordinates': coordinates[1:] }
 
+    def record_q_log(self):
+        data = execute_q()
+        
+        f = open('q_.log', 'w')
+        
+        f.write("directions")
+        f.write("\n")
+        f.write(",".join(str(i) for i in data['input'][0:3]))
+        f.write("\n\n")
+        f.write("coordinates")
+        f.write("\n")
+        f.write(",".join(str(i) for i in data['coordinates']))
+        
+        f.close()
+        
+if __name__ == "__main__":
+    for i in range(34):
+        print(DatasetGenerator((9, 9)).get_coordinate_from_id(i))

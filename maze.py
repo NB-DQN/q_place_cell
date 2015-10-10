@@ -75,4 +75,4 @@ class Maze:
         return csvstr
 
 if __name__ == "__main__":
-    Maze((9, 9), (9, 9)).display_cui()
+    Maze((9, 9), (9, 5)).display_cui()

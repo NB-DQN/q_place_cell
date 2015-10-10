@@ -1,5 +1,3 @@
-### q_place_cell
-
 ## Objective
 The objective is to computationally simulate the article below, which varified that place fields in rat hippocampus are finner near the goal location in a maze task.
 

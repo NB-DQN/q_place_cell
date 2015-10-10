@@ -1,8 +1,6 @@
-from agent import Agent
-
 import random
 
-class QAgent(Agent):
+class QAgent:
     def __init__(self, environment):
         self.environment = environment
         self.q = {}
@@ -16,8 +14,9 @@ class QAgent(Agent):
         else:
             a = self.choose_action_greedy(s)
         self.environment.move(a)
+        s_next = self.environment.coordinate_id()
         self.update_qsa(s, a, self.environment.coordinate_id())
-        return a
+        return s, a, s_next
 
     def choose_action_greedy(self, s):
         bests = []
@@ -36,7 +35,7 @@ class QAgent(Agent):
         GAMMA = 0.5
         qsa = self.get_qsa(s, a)
         qsa_max = max([self.get_qsa(s_new, a_new) for a_new in self.get_available_actions(s_new)])
-        rsa = 10 if self.environment.exit() else 0
+        rsa = 10 if self.environment.get_goal() else 0
 
         qsa_new = qsa + ALPHA * (rsa + GAMMA * qsa_max - qsa)
         self.q.setdefault(s, {})
