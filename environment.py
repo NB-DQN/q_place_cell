@@ -1,22 +1,41 @@
-from .. import maze_generator
 import math
 import numpy as np
+import maze_generator
+import maze
 
 class Environment:
-    def __init__(self, size=(9, 9)):
+    def __init__(self, size=(9, 9), goal = (9, 9)):
         self.size = size
-        self.maze = maze_generator.Maze(self.size)
+        self.goal = goal
+        self.maze = maze.Maze(self.size, self.goal)
         self.current_coordinate = (0, 0)
         self.move_count = 0
-        self.history = [self.current_coordinate]
-        self.novelty = 0
 
     def coordinate_id(self):
-        return self.current_coordinate[0] + self.current_coordinate[1] * self.size[0]
+        if self.current_coordinate[1] == 0:
+            cid = self.current_coordinate[0]
+        elif self.current_coordinate[0] == self.size[1] - 1:
+            cid = self.current_coordinate[1] + self.size[0] -1
+        elif self.current_coordinate[1] == self.size[1] -1:
+            cid = (self.size[0] * 2 + self.size[1] - 3) - self.current_coordinate[0]
+        elif self.current_coordinate[0] == 0:
+            cid = (self.size[0] + self.size[1] -2) * 2  - self.current_coordinate[1]
+        return cid
 
     def get_coordinate_from_id(self, cid):
-        x = cid % self.size[0]
-        y = (cid - x) / self.size[0]
+        if 0 <= cid and cid < self.size[0]:
+            x = cid
+            y = 0
+        elif self.size[0] <= cid and cid < self.size[0] + self.size[1] -1:
+            x = self.size[0] -1
+            y = cid - x
+        elif self.size[0] + self.size[1] -1 <= cid and cid < self.size[0] * 2 + self.size[1] -2:
+            x = self.size[0] * 2 + self.size[1] -3 - cid
+            y = self.size[1] -1
+        elif self.size[0] * 2 + self.size[1] -2 <= cid:
+            x = 0
+            y = (self.size[0] + self.size[1] -2) * 2 - cid
+
         return (x, y)
 
     def wall(self, cid=None):
@@ -32,23 +51,10 @@ class Environment:
             (self.current_coordinate[0]    , self.current_coordinate[1] - 1)]
         if self.wall()[direction] == 0:
             self.current_coordinate = neighbor[direction]
-        self.move_count += 1
-        self._Environment__check_novelty()
+            self.move_count += 1
 
-    def __check_novelty(self):
-        flag = False
-        for coordinate in self.history:
-            if coordinate == self.current_coordinate:
-                flag = True
-                break
-        if flag:
-            self.novelty = 0
-        else:
-            self.novelty = 10
-            self.history.append(self.current_coordinate)
-
-    def exit(self):
-        return self.maze.is_exit(self.current_coordinate)
+    def goal(self):
+        return self.maze.is_goal(self.current_coordinate)
 
     def visual_targets(self):
         return [ \
@@ -89,5 +95,3 @@ class Environment:
     def reset(self):
         self.current_coordinate = (0, 0)
         self.move_count = 0
-        self.history = [self.current_coordinate]
-        self.novelty = 0

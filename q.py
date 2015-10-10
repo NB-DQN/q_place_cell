@@ -1,8 +1,8 @@
 import modules
 
 size = (9, 9)
-environment = modules.environment.Environment(size)
-agent = modules.agent.QAgent(environment)
+environment =environment.Environment(size)
+agent = agent.QAgent(environment)
 
 environment.maze.display_cui()
 

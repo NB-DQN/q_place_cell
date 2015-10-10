@@ -1,8 +1,8 @@
 import maze_generator
 
 class Maze:
-    def __init__(self, size):
-        self.field = maze_generator.MazeGenerator(size).maze_generate()
+    def __init__(self, size, goal):
+        self.field = maze_generator.MazeGenerator(size, goal).maze_generate()
         self.size = size
 
     def check_coordinate(self, coordinate):
@@ -13,7 +13,7 @@ class Maze:
         self.check_coordinate(coordinate)
         return self.field[coordinate][0:4]
 
-    def is_exit(self, coordinate):
+    def is_goal(self, coordinate):
         self.check_coordinate(coordinate)
         return self.field[coordinate][4]
 
@@ -39,7 +39,10 @@ class Maze:
                     display_str += "8"
                 else:
                     display_str += " "
-                display_str += "   "
+                if self.field[(x, y, 4)] == 1:
+                    display_str += " G "
+                else:
+                    display_str += "   "
             if self.field[(self.size[0] - 1, y, 0)] == 1:
                 display_str += "8"
             else:
@@ -72,4 +75,4 @@ class Maze:
         return csvstr
 
 if __name__ == "__main__":
-    Maze((9, 9)).display_cui()
+    Maze((9, 9), (9, 9)).display_cui()

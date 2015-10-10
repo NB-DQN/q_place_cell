@@ -7,14 +7,31 @@ class DatasetGenerator:
         self.size = size
         self.current_coordinate = (0, 0)
 
-    def coordinate_id(self, coordinate=None):
-        if coordinate is None:
-            coordinate = self.current_coordinate
-        return coordinate[0] + coordinate[1] * self.size[0]
+    def coordinate_id(self):
+        if self.current_coordinate[1] == 0:
+            cid = self.current_coordinate[0]
+        elif self.current_coordinate[0] == self.size[1] - 1:
+            cid = self.current_coordinate[1] + self.size[0] -1
+        elif self.current_coordinate[1] == self.size[1] -1:
+            cid = (self.size[0] * 2 + self.size[1] - 3) - self.current_coordinate[0]
+        elif self.current_coordinate[0] == 0:
+            cid = (self.size[0] + self.size[1] -2) * 2  - self.current_coordinate[1]
+        return cid
 
     def get_coordinate_from_id(self, cid):
-        x = cid % self.size[0]
-        y = (cid - x) / self.size[0]
+        if 0 <= cid and cid < self.size[0]:
+            x = cid
+            y = 0
+        elif self.size[0] <= cid and cid < self.size[0] + self.size[1] -1:
+            x = self.size[0] -1
+            y = cid - x
+        elif self.size[0] + self.size[1] -1 <= cid and cid < self.size[0] * 2 + self.size[1] -2:
+            x = self.size[0] * 2 + self.size[1] -3 - cid
+            y = self.size[1] -1
+        elif self.size[0] * 2 + self.size[1] -2 <= cid:
+            x = 0
+            y = (self.size[0] + self.size[1] -2) * 2 - cid
+
         return (x, y)
 
     def visual_targets(self):
