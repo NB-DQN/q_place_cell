@@ -7,6 +7,7 @@ Hollup, S. A., Molden, S., Donnett, J. G., Moser, M. B., & Moser, E. I. (2001). 
 
 ## Method
 
+```
 * The environment
 
     0   1   2   3   4   5   6   7   8  
@@ -50,3 +51,4 @@ Hollup, S. A., Molden, S., Donnett, J. G., Moser, M. B., & Moser, E. I. (2001). 
   
     0   1   2   3   4   5   6   7   8  
     
+```
