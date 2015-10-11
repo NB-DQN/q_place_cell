@@ -34,17 +34,11 @@ Hollup, S. A., Molden, S., Donnett, J. G., Moser, M. B., & Moser, E. I. (2001). 
 
 ```
 
-The starting point is always (0, 0) .
-
-The goal is at first unavailable, but turns available once the agent has passed the entire arena. This trick solves the sampling problem that a well-trained agent would rarely visit all regions of the arena. 
+The starting point is always (0, 0) . The goal is at first unavailable, but turns available once the agent has passed the entire arena. This trick solves the sampling problem that a well-trained agent would rarely visit all regions of the arena. 
 
 * Agent
 
-The agent chooses the direction in a Q-learning-based epsilon greedy manner. 
-
-The agent gets some reward on the goal (indicated as G) if the goal is available, while  it gets no reward if the goal is unavailable.
-
-Once the agent reaches the available goal, the environment is reset and the agent is put back to the starting point. 
+The agent chooses the direction in a Q-learning-based epsilon greedy manner. The agent gets some reward on the goal (indicated as G) if the goal is available, while it gets no reward if the goal is unavailable. Once the agent reaches the available goal, the environment is reset and the agent is put back to the starting point. 
 
 * Training procedure
 
