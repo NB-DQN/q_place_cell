@@ -23,6 +23,7 @@ from chainer import optimizers
 
 from dataset_generator import DatasetGenerator
 import environment
+
 import q_agent
 
 # set parameters
@@ -49,8 +50,6 @@ mod = cuda.cupy if args.gpu >= 0 else np
 
 # validation dataset: random
 valid_data = DatasetGenerator(maze_size).generate_seq_random(100)
-# test dataset: random
-test_data = DatasetGenerator(maze_size).generate_seq_random(100)
 
 # model
 model = chainer.FunctionSet(
@@ -78,9 +77,14 @@ def forward_one_step(x, t, state, train=True):
     y = model.h_to_y(h)
     state = {'c': c, 'h': h}
 
-    accuracy = ((t.data - y.data) ** 2).sum() / 60
-    return state, F.sigmoid_cross_entropy(y, t), accuracy
+    sigmoid_y = 1 / (1 + np.exp(-y.data))
+    bin_y = np.round((np.sign(sigmoid_y - 0.5) + 1) / 2)
 
+    square_sum_error = ((t.data - sigmoid_y) ** 2).sum()
+    bin_y_error = ((t.data - bin_y) ** 2).sum()
+    
+    return state, F.sigmoid_cross_entropy(y, t), square_sum_error, bin_y_error, h.data[0]
+    
 # initialize hidden state
 def make_initial_state(batchsize=batchsize, train=True):
     return {name: chainer.Variable(mod.zeros((batchsize, n_units),
@@ -90,15 +94,21 @@ def make_initial_state(batchsize=batchsize, train=True):
 
 # evaluation
 def evaluate(data, test=False):
-    sum_accuracy = mod.zeros(())
+    sum_error = 0.0
     state = make_initial_state(batchsize=1, train=False)
-
+    hh = []
+    bin_y_error_sum = 0.0
+    
     for i in six.moves.range(len(data['input'])):
         x_batch = mod.asarray([data['input'][i]], dtype = 'float32')
         t_batch = mod.asarray([data['output'][i]], dtype = 'int32')
-        state, loss, accuracy = forward_one_step(x_batch, t_batch, state, train=False)
-        sum_accuracy += accuracy
-    return cuda.to_cpu(sum_accuracy)
+        state, loss, square_sum_error, bin_y_error, h_raw = forward_one_step(x_batch, t_batch, state, train=False)
+        
+        hh.append(h_raw)
+        bin_y_error_sum += bin_y_error
+        sum_error += square_sum_error
+        
+    return sum_error, hh, bin_y_error_sum
 
 # loop initialization
 cur_log_perp = mod.zeros(())
@@ -135,7 +145,7 @@ while epoch <= n_epoch:
         t_batch = mod.array([next_image], dtype = 'int32')
         
         # LSTM one step forward propagation
-        state, loss_i, acc_i = forward_one_step(x_batch, t_batch, state)
+        state, loss_i, acc_i, bin_i, h_i = forward_one_step(x_batch, t_batch, state)
         accum_loss += loss_i
         cur_log_perp += loss_i.data.reshape(())
         
@@ -154,20 +164,22 @@ while epoch <= n_epoch:
         
     env.reset()
     print('steps: {}'.format(count_move))
-    # print('direction history: {}'.format(direction_history))
-    # print('cid history: {}'.format(cid_history))
     
     if (epoch + 1) % valid_len == 0:
-
+        
+        # print the movement histories
+        # print('direction history: {}'.format(direction_history))
+        # print('cid history: {}'.format(cid_history))
+    
         # calculate accuracy, cumulative loss & throuput
-        valid_accuracy = evaluate(valid_data)
+        valid_square_sum_error, valid_hh, valid_error = evaluate(valid_data)
         perp = cuda.to_cpu(cur_log_perp) / valid_len
         now = time.time()
         throuput = valid_len / (now - cur_at)
-        print('epoch {}: train perp: {:.2f}  valid accuracy {} ({:.2f} epochs/sec)'
-                .format(epoch+1, perp, valid_accuracy, throuput))
+        print('epoch {}: train perp: {:.2f}  valid square-sum error: {:.2f} ({:.2f} epochs/sec)'
+                .format(epoch+1, perp, valid_square_sum_error, throuput))
         cur_at = now
-
+        
         #  termination criteria
         if perp < 0.001:
             break
@@ -183,5 +195,6 @@ while epoch <= n_epoch:
 
 # Evaluate on test dataset
 print('[test]')
-test_accuracy = evaluate(test_data, test=True)
-print('test accuracy: {}'.format(test_accuracy))
+test_data = DatasetGenerator(maze_size).generate_seq_random(100)
+test_square_sum_error, test_hh, test_error = evaluate(test_data, test=True)
+print('test square-sum error: {:.2f}'.format(test_square_sum_error))

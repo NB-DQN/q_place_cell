@@ -84,8 +84,8 @@ def forward_one_step(x, t, state, train=True):
     sigmoid_y = 1 / (1 + np.exp(-y.data))
     bin_y = np.round((np.sign(sigmoid_y - 0.5) + 1) / 2)
 
-    error = ((t.data - sigmoid_y) ** 2).sum() / 60
-    bin_y_error = ((t.data - bin_y) ** 2).sum() / 60
+    error = ((t.data - sigmoid_y) ** 2).sum()
+    bin_y_error = ((t.data - bin_y) ** 2).sum()
     return state, F.sigmoid_cross_entropy(y, t), error, bin_y_error, h.data[0]
 
 # initialize hidden state
@@ -97,31 +97,24 @@ def make_initial_state(batchsize=batchsize, train=True):
 
 # evaluation
 def evaluate(data, test=False):
-    sum_error = mod.zeros(())
+    sum_error = 0.0
     state = make_initial_state(batchsize=1, train=False)
-
     hh = []
     bin_y_error_sum = 0.0
 
     for i in range(len(data['input'])):
         x_batch = mod.asarray([data['input'][i]], dtype = 'float32')
         t_batch = mod.asarray([data['output'][i]], dtype = 'int32')
-        state, loss, error, bin_y_error, h_raw = forward_one_step(x_batch, t_batch, state, train=False)
+        state, loss, square_sum_error, bin_y_error, h_raw = forward_one_step(x_batch, t_batch, state, train=False)
         
         hh.append(h_raw)
         bin_y_error_sum += bin_y_error
-        
         sum_error += error
-        if test == True:
-            pass
-            # print('{} Target: ({}, {})'.format(error, t_batch[0] % maze_size[0],
-            #    t_batch[0] // maze_size[0]))
 
-            # print('c: {}, h: {}'.format(state['c'].data, state['h'].data)) # show the hidden states
-    return cuda.to_cpu(sum_error), hh, bin_y_error_sum
+    return sum_error, hh, bin_y_error_sum
 
 # Evaluate on test dataset
 print('[test]')
 test_data = generate_test_dataset()
-test_perp, test_hh, test_error = evaluate(test_data, test=True)
-print('test error: {}'.format(test_error/(60*100)))
+test_square_sum_error, test_hh, test_error = evaluate(test_data, test=True)
+print('test error: {}'.format(test_square_sum_error))
