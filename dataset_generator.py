@@ -145,7 +145,9 @@ class DatasetGenerator:
         f.write(",".join(str(i) for i in data['coordinates']))
         
         f.close()
-        
+
+"""
 if __name__ == "__main__":
     for i in range(34):
         print(DatasetGenerator((9, 9)).get_coordinate_from_id(i))
+"""

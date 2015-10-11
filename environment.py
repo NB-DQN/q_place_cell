@@ -10,6 +10,7 @@ class Environment:
         self.maze = maze.Maze(self.size, self.goal)
         self.current_coordinate = (0, 0)
         self.move_count = 0
+        self.move_history = [1] + [0] * ((self.size[0] + self.size[1]) * 2 - 5)
 
     def coordinate_id(self):
         if self.current_coordinate[1] == 0:
@@ -52,9 +53,10 @@ class Environment:
         if self.wall()[direction] == 0:
             self.current_coordinate = neighbor[direction]
             self.move_count += 1
+            self.move_history[self.coordinate_id()] = 1
 
     def get_goal(self):
-        if self.move_count > 200:
+        if sum(self.move_history) == 32: # whichi means that the agenet has passed the entire arena
             return self.maze.is_goal(self.current_coordinate)
         else:
             return 0
@@ -98,3 +100,4 @@ class Environment:
     def reset(self):
         self.current_coordinate = (0, 0)
         self.move_count = 0
+        self.move_history = [1] + [0] * ((self.size[0] + self.size[1]) * 2 - 5)
