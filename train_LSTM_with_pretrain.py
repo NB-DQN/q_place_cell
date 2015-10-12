@@ -34,6 +34,7 @@ import pickle
 
 import numpy as np
 import six
+import matplotlib.pyplot as plt
 
 import chainer
 from chainer import cuda
@@ -182,7 +183,29 @@ def EM_clustering():
     print('Clustering results: (y_true, y_pred)')
     print(labels_list_unique)
     
-    return EM_classifier
+    # analysis: size of place fields
+    result_size = np.zeros((target_length, 3))
+    for cluster_id in range(target_length):
+        cid_list = []
+        for i in range(len(labels_list_unique)):
+            if labels_list_unique[i][1] == cluster_id:
+                cid_list.append(labels_list_unique[i][0])
+        
+        mean_cid = float(sum(cid_list)) / len(cid_list)
+        distribution_cid = max(cid_list) - min(cid_list) *+ 1
+        result_size[cluster_id] = [cluster_id, mean_cid, distribution_cid]
+    result_size_cut = np.delete(result_size, 0, 1) # [mean_cid, distribution_cid]
+    result_size_sorted = result_size_cut[result_size_cut[:, 0].argsort()] # sort by mean_cid
+    
+    # analysis: distribution of place fields
+    result_distribution = np.zeros((target_length, 2))
+    for cid in range(target_length):
+        cluster_count = 0
+        for i in range(len(labels_list_unique)):
+            if labels_list_unique[i][0] == cid:
+                cluster_count += 1
+        result_distribution[cid] = [cid, cluster_count]
+    return EM_classifier, result_size_sorted, result_distribution
 
 
 # loop initialization
@@ -263,7 +286,7 @@ while True:
     epoch += 1
 
 # Clustering
-EM_classifier1 = EM_clustering()
+EM_classifier1, result_size_before, result_distribution_before = EM_clustering()
 
 # Fine tuning: train LSTM with Q-learning based dataset
 epoch = 0
@@ -274,6 +297,7 @@ print('[LSTM fine-tuning]')
 env =environment.Environment(maze_size, goal_location)
 env.maze.display_cui()
 agent = q_agent.QAgent(env)
+count_move_mean = 0
 
 while True:
 
@@ -321,6 +345,7 @@ while True:
         
     env.reset()
     print('Q steps: {}'.format(count_move))
+    count_move_mean += count_move
 
     if (epoch + 1) % valid_len2 == 0:
         
@@ -347,15 +372,18 @@ while True:
         print('SVM test accuracy: {}'.format(SVM_test_accuracy))
         
         # termination criteria
-        if count_move < 20:
+        count_move_mean = count_move_mean / valid_len2
+        
+        if count_move_mean < 19:
             break
         else:
             cur_log_perp.fill(0)
+            count_move_mean = 0
             
     epoch += 1
             
 # Clustering
-EM_classifier2 = EM_clustering()
+EM_classifier2, result_size_after, result_distribution_after = EM_clustering()
 
 # save the LSTM model
 f = open('LSTM_model_' + str(maze_size[0]) + '_' + str(maze_size[1]) + '.pkl', 'wb')
@@ -372,10 +400,31 @@ f = open('EM_model_'  + str(maze_size[0]) + '_' + str(maze_size[1]) + '.pkl', 'w
 pickle.dump(EM_classifier2, f, 2)
 f.close()  
 
-
 # LSTM evaluate on test dataset
 print('')
 print('[LSTM test]')
 test_data = DatasetGenerator(maze_size).generate_seq_random(100)
 test_square_sum_error, test_hh, test_bin_y_error = evaluate(test_data, test=True)
 print('test square-sum error: {:.2f}'.format(test_square_sum_error))
+
+# plot the clustering results
+# size analysis
+plt.subplot(1, 2, 1)
+plt. plot(result_size_before[:, 0], result_size_before[:, 1], c='blue')
+plt.hold(True)
+plt. plot(result_size_after[:, 0], result_size_after[:, 1], c = 'red')
+plt.title("Size of place field for each place cell cluster")
+plt.xlabel("Coordinate ID")
+plt.ylabel("Size of place field")
+plt.legend(["Before Training", "After Training"], loc =3)
+
+# distribution analysis
+plt.subplot(1, 2, 2)
+plt. plot(result_distribution_before[:, 0], result_distribution_before[:, 1], c='blue')
+plt.hold(True)
+plt.plot(result_distribution_after[:, 0], result_distribution_after[:, 1], c = 'red')
+plt.title("Distribution of place cells for each coordinates")
+plt.xlabel("Coordinate ID")
+plt.ylabel("Number of place cells")
+plt.legend(["Before Training", "After Training"], loc =3)
+plt.show()
