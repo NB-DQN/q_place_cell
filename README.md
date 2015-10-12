@@ -95,7 +95,7 @@ LSTM training works well since in this case the agent covers the entire arena. H
 
 ## Training procedure B
 
-!(https://raw.githubusercontent.com/NB-DQN/q_place_cell/master/clustering_analysis_151012.png)
+![results] (https://raw.githubusercontent.com/NB-DQN/q_place_cell/master/clustering_analysis_151012.png)
 
 
 ```
