@@ -5,7 +5,7 @@ The purpose is to computationally simulate the paper below, which showed that pl
 Hollup, S. A., Molden, S., Donnett, J. G., Moser, M. B., & Moser, E. I. (2001). Accumulation of hippocampal place fields at the goal location in an annular watermaze task. The Journal of Neuroscience, 21(5), 1635-1644.
 
 
-# Method
+# Methods
 
 ## Maze environment
 
@@ -76,7 +76,7 @@ This training procedure is implemented in order to circumvent some problems on t
 
 The RNN hdden layer and SVM targets are assumed in CA3 regions, while EM targets are assumed in CA1 regions where plastic place cells are observed.
 
-# Result
+# Results
 
 ## Training procedure A
 
