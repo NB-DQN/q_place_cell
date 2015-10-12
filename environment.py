@@ -56,10 +56,12 @@ class Environment:
             self.move_history[self.coordinate_id()] = 1
 
     def get_goal(self):
-        if sum(self.move_history) == 32: # whichi means that the agenet has passed the entire arena
-            return self.maze.is_goal(self.current_coordinate)
-        else:
-            return 0
+        # if sum(self.move_history) == 32: 
+        # which means that the agenet has passed the entire arena
+        #     return self.maze.is_goal(self.current_coordinate)
+        # else:
+        #     return 0
+        return self.maze.is_goal(self.current_coordinate)
 
     def visual_targets(self):
         return [ \

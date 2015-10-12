@@ -98,7 +98,7 @@ class DatasetGenerator:
         coordinates = []
 
         image.append(self.visual_image())
-        coordinates.append((0, 0))
+        coordinates.append(0)
 
         for i in range(0, seq_length):
             direction_choice = [[1, 0, 0, 0], [0, 1, 0, 0], [0, 0, 1, 0], [0, 0, 0, 1]]
@@ -123,7 +123,7 @@ class DatasetGenerator:
 
             directions.append(direction)
             image.append(self.visual_image())
-            coordinates.append(self.current_coordinate)
+            coordinates.append(self. coordinate_id())
 
         input = []
         for i in range(len(directions)):

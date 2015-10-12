@@ -94,7 +94,7 @@ def make_initial_state(batchsize=batchsize, train=True):
 
 # evaluation
 def evaluate(data, test=False):
-    sum_error = 0.0
+    sum_error = 0
     state = make_initial_state(batchsize=1, train=False)
     hh = []
     bin_y_error_sum = 0.0
