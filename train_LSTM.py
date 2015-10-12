@@ -171,13 +171,13 @@ while epoch <= n_epoch:
         # print('direction history: {}'.format(direction_history))
         # print('cid history: {}'.format(cid_history))
     
-        # calculate accuracy, cumulative loss & throuput
+        # calculate accuracy, cumulative loss & throughput
         valid_square_sum_error, valid_hh, valid_error = evaluate(valid_data)
         perp = cuda.to_cpu(cur_log_perp) / valid_len
         now = time.time()
-        throuput = valid_len / (now - cur_at)
+        throughput = valid_len / (now - cur_at)
         print('epoch {}: train perp: {:.2f}  valid square-sum error: {:.2f} ({:.2f} epochs/sec)'
-                .format(epoch+1, perp, valid_square_sum_error, throuput))
+                .format(epoch+1, perp, valid_square_sum_error, throughput))
         cur_at = now
         
         #  termination criteria
